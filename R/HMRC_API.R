@@ -158,7 +158,7 @@ call_hs_hmrc_ots_with_product_code <- function(time_window = NULL, # like "Month
   query <- paste0("?$apply=filter(",
                   filter_crit,")/groupby((",
                   grouping_by,
-                  "), aggregate(Value with sum as SumValue))&$count=true")
+                  "), aggregate(Value with sum as SumValue, Netmass with sum as weight_kg))&$count=true")
 
   full_url <- paste0(base, endpoint, gsub(" ","%20", query))
   message("Your query is : ", full_url)
@@ -348,7 +348,7 @@ call_hs_hmrc_ots_with_key_word_search <- function(time_window = NULL, # like "Mo
   query <- paste0("?$apply=filter(",
                   filter_crit,")/groupby((",
                   grouping_by,
-                  "), aggregate(Value with sum as SumValue))&$count=true")
+                  "), aggregate(Value with sum as SumValue, Netmass with sum as weight_kg))&$count=true")
 
   full_url <- paste0(base, endpoint, gsub(" ","%20", query))
   message("Your query is : ", full_url)
@@ -569,7 +569,7 @@ call_sitc_hmrc_with_product_code <- function(time_window = NULL, # like "MonthId
   query <- paste0("?$apply=filter(",
                   filter_crit,")/groupby((",
                   grouping_by,
-                  "), aggregate(Value with sum as SumValue))&$count=true")
+                  "), aggregate(Value with sum as SumValue, Netmass with sum as weight_kg))&$count=true")
 
   full_url <- paste0(base, endpoint, gsub(" ","%20", query))
   message("Your query is : ", full_url)
@@ -772,7 +772,7 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
   query <- paste0("?$apply=filter(",
                   filter_crit,")/groupby((",
                   grouping_by,
-                  "), aggregate(Value with sum as SumValue))&$count=true")
+                  "), aggregate(Value with sum as SumValue, Netmass with sum as weight_kg))&$count=true")
 
   full_url <- paste0(base, endpoint, gsub(" ","%20", query))
   message("Your query is : ", full_url)

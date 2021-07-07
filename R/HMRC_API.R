@@ -70,7 +70,7 @@ call_hs_hmrc_ots_with_product_code <- function(time_window = NULL, # like "Month
     return()
 
   } else {
-    filter_crit = paste0(time_window, " and CommodityId gt 0 and SuppressionIndex eq 0")
+    filter_crit = paste0(time_window, " and CommodityId gt 0 and SuppressionIndex eq 0") #
   }
 
   #Goods filter is not compulsory
@@ -165,7 +165,7 @@ call_hs_hmrc_ots_with_product_code <- function(time_window = NULL, # like "Month
 
   req <- httr::GET(full_url)
 
-  # Extarct content (in json format)
+  # Extract content (in json format)
 
   json_content <- httr::content(req, as = "text", encoding = "UTF-8")
 
@@ -211,6 +211,27 @@ call_hs_hmrc_ots_with_product_code <- function(time_window = NULL, # like "Month
 
   #Commented out for now as it slows down bigger requests
   #print(htmlTable::htmlTable(df, rnames=FALSE))
+  #Prep variable
+  product_condition = TRUE
+  if(!is.null(filter_for_code)){
+    product_condition = nchar(filter_for_code) < 4
+  }
+
+  #Call EU correction
+  if(length(intersect(c("hs4", "hs6", "cn8"),groupby)) == 0 &
+                      product_condition &
+                      is.null(country_filter)){
+
+     get_eu_estimates(time_window = time_window,
+                      code_filter = filter_for_code,
+                      flow_filter = flow_filter,
+                      code_type = "hs",
+                      groupby = groupby) -> eu_corr
+     df <- plyr::rbind.fill(df, eu_corr)
+
+  }
+
+
   return(df)
 
 }
@@ -265,7 +286,7 @@ call_hs_hmrc_ots_with_key_word_search <- function(time_window = NULL, # like "Mo
     return()
 
   } else {
-    filter_crit = paste0(time_window, " and CommodityId gt 0 and SuppressionIndex eq 0")
+    filter_crit = paste0(time_window, " and CommodityId ne 0 and SuppressionIndex eq 0")
   }
 
   #Goods filter is not compulsory
@@ -403,6 +424,22 @@ call_hs_hmrc_ots_with_key_word_search <- function(time_window = NULL, # like "Mo
                                         value.FlowTypeId == 4 ~ "Non-EU Exports"))
   #Commented out for now as it slows down bigger requests
   #print(htmlTable::htmlTable(df, rnames=FALSE))
+
+  #Call EU correction
+  if(length(intersect(c("hs4", "hs6", "cn8"),groupby)) == 0 &
+     is.null(country_filter)){
+
+    get_eu_estimates(time_window = time_window,
+                     code_filter = unique(df$value.Commodity.Hs2Code),
+                     flow_filter = flow_filter,
+                     code_type = "hs",
+                     groupby = groupby) -> eu_corr
+    df <- plyr::rbind.fill(df, eu_corr)
+
+  }
+
+
+
   return(df)
 
 }
@@ -622,6 +659,21 @@ call_sitc_hmrc_with_product_code <- function(time_window = NULL, # like "MonthId
 
   #Commented out for now as it slows down bigger requests
   #print(htmlTable::htmlTable(df, rnames=FALSE))
+  #Call EU correction
+  if(length(intersect(c("sitc1", "sitc2", "sitc3", "sitc4"),groupby)) == 0 &
+     is.null(filter_for_code) &
+     is.null(country_filter) &
+     endpoint == "ots"){
+
+    get_eu_estimates(time_window = time_window,
+                     code_filter = NULL,
+                     flow_filter = flow_filter,
+                     code_type = "sitc",
+                     groupby = groupby) -> eu_corr
+    df <- plyr::rbind.fill(df, eu_corr)
+
+  }
+
   return(df)
 
 }
@@ -644,7 +696,7 @@ call_sitc_hmrc_with_product_code <- function(time_window = NULL, # like "MonthId
 #' @import httr
 #' @examples
 #'  call_sitc_hmrc_with_key_word_search(key_word = "cheese", filter_agg = "sitc2", time_window = "MonthId eq 201901", endpoint = "rts", groupby = c("sitc4", "COUNTRY"))
-#'  call_sitc_hmrc_with_key_word_search(filter_agg = "sitc0", time_window = "MonthId gt 201906 and MonthId lt 202008", endpoint = "ots", country_filter = "FR", flow_filter = "EXport", groupby = c("SITc2", "COUNTRY"))
+#'  call_sitc_hmrc_with_key_word_search(filter_agg = "sitc1", time_window = "MonthId gt 201906 and MonthId lt 202008", endpoint = "ots", country_filter = "FR", flow_filter = "EXport", groupby = c("SITc2", "COUNTRY"))
 
 call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "MonthId gt 202000 and MonthId lt 202100" which is everything from 2020 or "MonthId gt 201908 and MonthId lt 202009" last 12 month up to end of August
                                                     endpoint = "none", # choose RTS or OTS
@@ -658,6 +710,7 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
 
   base <-"https://api.uktradeinfo.com/" #https://frontdoor-hmrcukti-uat.azurefd.net/"
   endpoint = tolower(endpoint)
+  filter_agg = tolower(filter_agg)
 
   #This is where you select "ots" for Overseas Trade Statistics and "rts" for Regional Trade statistics
   if(!(endpoint %in% c("ots", "rts"))){
@@ -779,9 +832,15 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
 
   req <- httr::GET(full_url)
 
-  # Extarct content (in json format)
+  # Extract content (in json format)
 
   json_content <- httr::content(req, as = "text", encoding = "UTF-8")
+
+  #Catch cases when datast is empty
+  if(str_detect(json_content, "@odata.count\":0")){
+    print("Keyword resulted in 0 lines try a different keyword")
+    return()
+  }
 
   # Convert json to dataframe
 
@@ -801,6 +860,12 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
     req <- httr::GET(my_url)
 
     json_content <- httr::content(req, as = "text", encoding = "UTF-8")
+
+    #check if call worked
+    if(str_detect(json_content, "@odata.count\":0")){
+      print("Keyword resulted in 0 lines try a different keyword")
+      return()
+    }
 
     my_df <- jsonlite::fromJSON(json_content, flatten = TRUE) %>%
       data.frame() %>%
@@ -825,6 +890,123 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
                                         value.FlowTypeId == 4 ~ "Non-EU Exports"))
   #Commented out for now as it slows down bigger requests
   #print(htmlTable::htmlTable(df, rnames=FALSE))
+  if(length(intersect(c("sitc1", "sitc2", "sitc3", "sitc4"),groupby)) == 0 &
+     is.null(country_filter) &
+     endpoint == "ots"){
+
+    get_eu_estimates(time_window = time_window,
+                     code_filter = NULL,
+                     flow_filter = flow_filter,
+                     code_type = "sitc",
+                     groupby = groupby) -> eu_corr
+    df <- plyr::rbind.fill(df, eu_corr)
+
+  }
+
   return(df)
 
+}
+
+#'HMRC OTS EU estimates corrector
+#'
+#'Mostly used to add EU estimates corrections to queries but can be used on its own
+#'
+#' @param time_window like "MonthId gt 202000 and MonthId lt 202100" which is everything from 2020 or "MonthId gt 201908 and MonthId lt 202009" last 12 month up to end of August. It is taken automatically from the query
+#' @param flow_filter choose from "export" "import" or "EU"
+#' @param code_type 'hs' or 'sitc' populated automatically in code
+#' @param groupby takes a vector of keywords the full range is  c("country", "year", "month", "hs2"). Disaggregation for EU estimates is not available at a lower level or at SITC level. Taken automatically from function.
+#' @keywords HMRC API
+#' @export
+#' @import dplyr
+#' @import jsonlite
+#' @import stringr
+#' @import httr
+#' @examples
+#'  get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", 'hs2', groupby = c("country", "year", "HS2")
+#'  get_eu_estimates(time_window = "MonthId gt 202008", 'sitc', groupby = c("country", "year", "month")
+
+
+get_eu_estimates <- function(time_window,
+                             code_filter = NULL,
+                             flow_filter = "eu",
+                             code_type,
+                             groupby){
+  base <-"https://api.uktradeinfo.com/"
+  endpoint = "ots"
+  if(is.null(flow_filter)){
+    flow_filter = "eu"
+  } else{
+    flow_filter = tolower(flow_filter)
+  }
+
+
+  if(code_type == 'hs'){
+  #Please note EU estimates only apply on the HS2 level and to the whole of the EU
+    query <- paste0("?$apply=filter(",
+                    time_window, " and CommodityId lt 0)")
+  } else if(code_type == 'sitc'){
+    query <- paste0("?$apply=filter(",
+                    time_window, " and CommoditySitcId lt -1)")
+  }
+  full_url <- paste0(base, endpoint, gsub(" ","%20", query))
+  message("Your query is : ", full_url)
+
+  req <- httr::GET(full_url)
+
+  # Extract content (in json format)
+
+  json_content <- httr::content(req, as = "text", encoding = "UTF-8")
+
+  # Convert json to dataframe
+
+  my_df <- jsonlite::fromJSON(json_content, flatten = TRUE) %>%
+    data.frame()
+  the_string = c("value.FlowTypeId")
+
+  if(!is.null(groupby)){
+    groupby <- tolower(groupby)
+
+    if(length(intersect(c("hs2"), groupby)) > 0){
+      my_df %>% dplyr::mutate(value.Commodity.Hs2Code = sprintf("%02d",value.CommodityId*(-0.1))) -> my_df
+      if(!is.null(code_filter)){
+        my_df %>% dplyr::filter(value.Commodity.Hs2Code %in% code_filter) -> my_df
+      }
+      the_string <- c(the_string, "value.Commodity.Hs2Code")
+    }
+    if("country" %in% groupby){
+        my_df %>% dplyr::mutate(value.Country.CountryCodeAlpha = "EU_Estimate") -> my_df
+      the_string <- c(the_string, "value.Country.CountryCodeAlpha")
+    }
+
+    if("year" %in% groupby){
+
+      my_df %>% dplyr::mutate(value.Date.Year = str_sub(value.MonthId, 1,4)) -> my_df
+        the_string <- c(the_string, "value.Date.Year")
+    }
+
+    if("month" %in% groupby){
+        my_df %>% dplyr::mutate(value.Date.MonthId = value.MonthId)-> my_df
+       the_string <- c(the_string, "value.Date.MonthId")
+    }
+  }
+
+  print(flow_filter)
+  if(flow_filter == "export"){
+    my_df %>% dplyr::filter(value.FlowTypeId ==2) ->my_df
+  } else if(flow_filter == "import"){
+    my_df %>% dplyr::filter(value.FlowTypeId ==1) ->my_df
+  }
+
+  my_df %>% dplyr::group_by( .dots = (the_string))%>%
+            dplyr::summarise(value.weight_kg = sum(value.NetMass),
+                             value.SumValue = sum(value.Value))%>%
+            dplyr::ungroup() %>%
+            dplyr::mutate(value.FlowTypeId = dplyr::case_when(value.FlowTypeId == 1 ~ "EU Imports",
+                                                              value.FlowTypeId == 2 ~ "EU Exports",
+                                                              value.FlowTypeId == 3 ~ "Non-EU imports",
+                                                              value.FlowTypeId == 4 ~ "Non-EU Exports")) -> df
+
+
+
+  return(df)
 }

@@ -32,7 +32,7 @@ Querying the HMRC OTS data using HS nomenclature. The arguments are not case-sen
 }
 \examples{
  call_sitc_hmrc_with_key_word_search(key_word = "cheese", filter_agg = "sitc2", time_window = "MonthId eq 201901", endpoint = "rts", groupby = c("sitc4", "COUNTRY"))
- call_sitc_hmrc_with_key_word_search(filter_agg = "sitc0", time_window = "MonthId gt 201906 and MonthId lt 202008", endpoint = "ots", country_filter = "FR", flow_filter = "EXport", groupby = c("SITc2", "COUNTRY"))
+ call_sitc_hmrc_with_key_word_search(filter_agg = "sitc1", time_window = "MonthId gt 201906 and MonthId lt 202008", endpoint = "ots", country_filter = "FR", flow_filter = "EXport", groupby = c("SITc2", "COUNTRY"))
 }
 \keyword{API}
 \keyword{HMRC}

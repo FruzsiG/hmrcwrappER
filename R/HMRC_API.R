@@ -14,7 +14,7 @@ library(jsonlite)
 library(htmlTable)
 
 
-#'HMRC OTS query base on code and HS
+#'HMRC OTS query based on code and HS
 #'
 #'Querying the HMRC OTS data using HS nomenclature. The arguments are not case-sensitive the API itself is still in BETA thus we continue reporting issues.
 #'
@@ -695,7 +695,7 @@ call_sitc_hmrc_with_product_code <- function(time_window = NULL, # like "MonthId
 #' @import stringr
 #' @import httr
 #' @examples
-#'  call_sitc_hmrc_with_key_word_search(key_word = "cheese", filter_agg = "sitc2", time_window = "MonthId eq 201901", endpoint = "rts", groupby = c("sitc4", "COUNTRY"))
+#'  call_sitc_hmrc_with_key_word_search(key_word = "dairy", filter_agg = "sitc2", time_window = "MonthId eq 201901", endpoint = "rts", groupby = c("sitc4", "COUNTRY"))
 #'  call_sitc_hmrc_with_key_word_search(filter_agg = "sitc1", time_window = "MonthId gt 201906 and MonthId lt 202008", endpoint = "ots", country_filter = "FR", flow_filter = "EXport", groupby = c("SITc2", "COUNTRY"))
 
 call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "MonthId gt 202000 and MonthId lt 202100" which is everything from 2020 or "MonthId gt 201908 and MonthId lt 202009" last 12 month up to end of August
@@ -912,6 +912,7 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
 #'Mostly used to add EU estimates corrections to queries but can be used on its own
 #'
 #' @param time_window like "MonthId gt 202000 and MonthId lt 202100" which is everything from 2020 or "MonthId gt 201908 and MonthId lt 202009" last 12 month up to end of August. It is taken automatically from the query
+#' @param code_filter like "02" only works with HS as there is no breakdown for SITC on the API. It is taken automatically from the query
 #' @param flow_filter choose from "export" "import" or "EU"
 #' @param code_type 'hs' or 'sitc' populated automatically in code
 #' @param groupby takes a vector of keywords the full range is  c("country", "year", "month", "hs2"). Disaggregation for EU estimates is not available at a lower level or at SITC level. Taken automatically from function.
@@ -922,8 +923,9 @@ call_sitc_hmrc_with_key_word_search <- function(time_window = NULL, # like "Mont
 #' @import stringr
 #' @import httr
 #' @examples
-#'  get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", 'hs2', groupby = c("country", "year", "HS2")
-#'  get_eu_estimates(time_window = "MonthId gt 202008", 'sitc', groupby = c("country", "year", "month")
+#'  get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", code_type = 'hs', groupby = c("country", "year", "HS2"))
+#'  get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", code_filter='02', code_type = 'hs', groupby = c("month", "HS2"))
+#'  get_eu_estimates(time_window = "MonthId gt 202008", code_type = 'sitc', groupby = c("country", "year", "month"))
 
 
 get_eu_estimates <- function(time_window,

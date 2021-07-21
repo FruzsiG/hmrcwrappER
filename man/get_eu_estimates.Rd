@@ -15,6 +15,8 @@ get_eu_estimates(
 \arguments{
 \item{time_window}{like "MonthId gt 202000 and MonthId lt 202100" which is everything from 2020 or "MonthId gt 201908 and MonthId lt 202009" last 12 month up to end of August. It is taken automatically from the query}
 
+\item{code_filter}{like "02" only works with HS as there is no breakdown for SITC on the API. It is taken automatically from the query}
+
 \item{flow_filter}{choose from "export" "import" or "EU"}
 
 \item{code_type}{'hs' or 'sitc' populated automatically in code}
@@ -25,7 +27,7 @@ get_eu_estimates(
 Mostly used to add EU estimates corrections to queries but can be used on its own
 }
 \examples{
- get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", 'hs2', groupby = c("country", "year", "HS2")
+ get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", code_type = 'hs', groupby = c("country", "year", "HS2"))
  get_eu_estimates(time_window = "MonthId gt 201906 and MonthId lt 202008", code_filter='02', code_type = 'hs', groupby = c("month", "HS2"))
  get_eu_estimates(time_window = "MonthId gt 202008", code_type = 'sitc', groupby = c("country", "year", "month"))
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/HMRC_API.R
 \name{call_hs_hmrc_ots_with_product_code}
 \alias{call_hs_hmrc_ots_with_product_code}
-\title{HMRC OTS query base on code and HS}
+\title{HMRC OTS query based on code and HS}
 \usage{
 call_hs_hmrc_ots_with_product_code(
   time_window = NULL,

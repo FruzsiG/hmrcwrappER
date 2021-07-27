@@ -13,9 +13,9 @@ Authors@R: c(
            email = "Kieran.Driscoll@trade.gov.uk", 
            comment = ""))
 Description: This package was developed for the typical one-off HMRC requests done in DIT as a quick access tool. The tool is under development resolving issues with the API as they show up. If you have any requests please email me. To find out what functions are in the pacakage run \code{ls("package:hmrcwrappeR")}.
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+License: `use_mit_license()`
 Encoding: UTF-8
+Depends: R (>= 3.6.0)
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1

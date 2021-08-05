@@ -1,5 +1,5 @@
 # Libraries you will need
-for (i in c("dplyr","stringr","httr", "jsonlite", "htmlTable")) {
+for (i in c("dplyr","stringr","httr", "jsonlite")) {
   if (i %in% rownames(installed.packages())) {
     library(i, character.only = TRUE)
   } else {
@@ -11,7 +11,7 @@ library(dplyr)
 library(stringr)
 library(httr)
 library(jsonlite)
-library(htmlTable)
+#library(htmlTable)
 
 
 #'HMRC OTS query based on code and HS
